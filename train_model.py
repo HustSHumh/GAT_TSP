@@ -86,6 +86,7 @@ def train_batch(
         log_values(cost, grad_norms, epoch, batch_id, step,
                    log_likelihood, reiforce_loss, bl_loss, tb_logger, opts)
 
+
 def train_epoch(model, optimizer, baseline, lr_scheduler, epoch, val_dataset, problem, tb_logger, opts):
     print('Start train epoch {}, lr={} for run {}'.format(epoch, optimizer.param_groups[0]['lr'], opts.run_name))
     step = epoch * (opts.epoch_size // opts.batch_size)
@@ -133,13 +134,13 @@ def train_epoch(model, optimizer, baseline, lr_scheduler, epoch, val_dataset, pr
             os.path.join(opts.save_dir, 'epoch-{}.pt'.format(epoch))
         )
 
-        avg_reward = validate(model, val_dataset, opts)
+    avg_reward = validate(model, val_dataset, opts)
 
-        if not opts.no_tensorboard:
-            tb_logger.log_value('val_avg_reward', avg_reward, step)
+    if not opts.no_tensorboard:
+        tb_logger.log_value('val_avg_reward', avg_reward, step)
 
-        baseline.epoch_callback(model, epoch)
+    baseline.epoch_callback(model, epoch)
 
-        lr_scheduler.step()
+    lr_scheduler.step()
 
 

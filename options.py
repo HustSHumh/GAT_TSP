@@ -12,7 +12,7 @@ def get_options(args=None):
     parser.add_argument('--problem', default='tsp', help="The problem to solve, default 'tsp'")
     parser.add_argument('--graph_size', type=int, default=20, help="The size of the problem graph")
     parser.add_argument('--batch_size', type=int, default=512, help='Number of instances per batch during training')
-    parser.add_argument('--epoch_size', type=int, default=1280000, help='Number of instances per epoch during training')
+    parser.add_argument('--epoch_size', type=int, default=4096, help='Number of instances per epoch during training')
     parser.add_argument('--val_size', type=int, default=10000,
                         help='Number of instances used for reporting validation performance')
     parser.add_argument('--val_dataset', type=str, default=None, help='Dataset file to use for validation')
@@ -21,7 +21,7 @@ def get_options(args=None):
     parser.add_argument('--model', default='GAT', help='Model, GAT')
     parser.add_argument('--embedding_dim', type=int, default=128, help='d_model, Dimension of input enbedding')
     parser.add_argument('--hidden_dim', type=int, default=128, help='Dimension of hidden layers in Enc/Dec')
-    parser.add_argument('--n_encode_layers', type=int, default=3,
+    parser.add_argument('--n_encode_layers', type=int, default=0,
                         help='Number of transformer layers in the encoder network')
     parser.add_argument('--tanh_clipping', type=float, default=10.,
                         help='Clip the parameters to within +- this value using tanh. '
