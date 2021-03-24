@@ -31,6 +31,7 @@ class Encoder(nn.Module):
         enc_input = input_node
         # [bs, gs, d_mdoel]
         trans_out = self.transformer_encoder(enc_input)
+        # return trans_out
         graph_out = self.graph_attn(trans_out)
 
         return graph_out

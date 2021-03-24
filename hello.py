@@ -19,5 +19,6 @@ class NT(NamedTuple):
 
 
 if __name__ == '__main__':
-    a = torch.Tensor(np.arange(24).reshape(2, 3, 4))[:, 0, :]
-    print(torch.cuda.is_available())
+    batch_size = 20
+    graph_size = 20
+    adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
