@@ -4,9 +4,6 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <content url="file://D:/项目root/毕业论文方向/TSP/GITHUB/attention-is-all-you-need-pytorch-master" />
-    <content url="file://D:/项目root/毕业论文方向/TSP/GITHUB/pyGAT-master" />
-    <content url="file://D:/项目root/毕业论文方向/TSP/attention-learn-to-route-master" />
     <orderEntry type="jdk" jdkName="Python 3.7 (GAN_TSP)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
