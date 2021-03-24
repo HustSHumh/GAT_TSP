@@ -14,12 +14,13 @@ class GraphAttentionLayer(nn.Module):
         self.alpha = alpha
         self.concat = concat
 
-        self.W = nn.Linear(self.in_features, self.out_features)
-        self.a = nn.Linear(2 * self.out_features, 1)
+        self.W = nn.Linear(in_features, out_features, bias=False)
+        nn.init.xavier_uniform_(self.W.weight, gain=1.414)
+        self.a = nn.Linear(2 * out_features, 1)
+        nn.init.xavier_uniform_(self.a.weight, gain=1.414)
 
         self.dropout = nn.Dropout(dropout)
         self.leakyrelu = nn.LeakyReLU(self.alpha)
-        self.layer_norm = nn.LayerNorm(out_features, 1e-6)
 
     def forward(self, h):
         """
@@ -27,22 +28,27 @@ class GraphAttentionLayer(nn.Module):
         :param h: [bs, gs, in_f]
         :return:
         """
+        batch_size, graph_size = h.size(0), h.size(1)
+        adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
+
         #[bs, gs, out_feature]
         Wh = self.W(h)
         # [bs, gs, gs, 2*out_f]
         a_input = self._prepare_attentional_mechanism_input(Wh)
         # [bs, gs, gs]
         e = self.leakyrelu(self.a(a_input).squeeze(-1))
+        zero_vec = -9e15*torch.ones_like(e)
+        attention = torch.where((adj > 0).cuda(), e, zero_vec)
 
         # [bs, gs, gs]
-        attention = F.softmax(e, dim=-1)
+        attention = F.softmax(attention, dim=-1)
         attention = self.dropout(attention)
         # [bs, gs, out_f]
         h_prime = torch.matmul(attention, Wh)
         if self.concat:
-            h_prime = F.elu(h_prime) + h
+            h_prime = F.elu(h_prime)
 
-        return self.layer_norm(h_prime)
+        return h_prime
 
     def _prepare_attentional_mechanism_input(self, Wh):
         """
