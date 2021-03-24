@@ -22,6 +22,8 @@ class GraphAttentionLayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.leakyrelu = nn.LeakyReLU(self.alpha)
 
+        self.layer_norm = nn.LayerNorm(out_features, eps=1e-6)
+
     def forward(self, h):
         """
         in_f = out_f = d_model
@@ -46,9 +48,9 @@ class GraphAttentionLayer(nn.Module):
         # [bs, gs, out_f]
         h_prime = torch.matmul(attention, Wh)
         if self.concat:
-            h_prime = F.elu(h_prime)
+            h_prime = F.elu(h_prime) + h
 
-        return h_prime
+        return self.layer_norm(h_prime)
 
     def _prepare_attentional_mechanism_input(self, Wh):
         """
