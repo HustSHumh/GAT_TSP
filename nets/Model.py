@@ -4,7 +4,7 @@ from torch.utils.checkpoint import checkpoint
 import math
 from typing import NamedTuple
 
-from nets.graph_encoder import Encoder
+from nets.attention_model import Encoder
 
 
 def set_decode_type(model, decode_type):
@@ -58,11 +58,11 @@ class Model(nn.Module):
         self.init_embed = nn.Linear(node_dim, self.embedding_dim)
 
         self.embeder = Encoder(
-            trans_layers=self.n_encode_layers,
+            n_layers=self.n_encode_layers,
             n_heads=self.n_heads,
             d_model=self.embedding_dim,
             d_ffd=self.hidden_dim,
-            alpha=opts.alpha,
+            # alpha=opts.alpha,
             dropout=self.dropout
         )
 
