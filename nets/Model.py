@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 import math
 from typing import NamedTuple
@@ -55,15 +56,14 @@ class Model(nn.Module):
         self.W_placeholder = nn.Parameter(torch.Tensor(2 * self.embedding_dim))
         self.W_placeholder.data.uniform_(-1, 1)
 
-        self.init_embed = nn.Linear(node_dim, self.embedding_dim)
+        # self.init_embed = nn.Linear(node_dim, self.embedding_dim)
 
         self.embeder = Encoder(
-            trans_layers=self.n_encode_layers,
-            n_heads=self.n_heads,
-            d_model=self.embedding_dim,
-            d_ffd=self.hidden_dim,
-            alpha=opts.alpha,
-            dropout=self.dropout
+            node_dim=2,
+            n_layers=opts.n_encode_layers,
+            n_heads=opts.n_heads,
+            d_model=opts.embedding_dim,
+            d_ffd=opts.hidden_dim
         )
 
         # compute fixed params (glimpse key, glimpse value, logit key)
@@ -85,9 +85,9 @@ class Model(nn.Module):
         '''
         # [bs, gs, d_model]
         if self.checkpoint_encoder and self.training:
-            embeddings = checkpoint(self.embeder, self.init_embed(input))
+            embeddings = checkpoint(self.embeder, input)
         else:
-            embeddings = self.embeder(self.init_embed(input))
+            embeddings = self.embeder(input)
 
         # [bs, num_steps, graph_size], [bs, num_step]
         _log_p, pi = self._inner(input, embeddings)
@@ -170,7 +170,7 @@ class Model(nn.Module):
         )
         return AttentionModelFixed(embeddings, fixed_context, *fixed_attention_node_data)
 
-    def _get_log_p(self, fixed, state, normalize=True):
+    def _get_log_p(self, fixed, state, normalize=False):
         '''
         num_steps = graph_size
         :param fixed:

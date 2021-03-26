@@ -3,47 +3,33 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nets.attention_model import TransformerEncoder, GraphAttention
+from nets.attention_model import EncodeLayer
 
 
 class Encoder(nn.Module):
-
-    def __init__(self, trans_layers, n_heads, d_model, d_ffd, alpha, dropout):
+    def __init__(self, node_dim, n_layers, n_heads, d_model, d_ffd, dropout=0.0):
         super(Encoder, self).__init__()
-        self.n_heads = n_heads
-        self.d_model = d_model
-        self.d_k = d_model // n_heads
-        self.d_v = d_model // n_heads
+        self.n_layers = n_layers
+        self.layers = nn.ModuleList([
+            EncodeLayer(n_heads, d_model, d_ffd, dropout)
+            for _ in range(n_layers)
+        ])
+        self.init_embed = nn.Linear(node_dim, d_model, bias=False)
+        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
 
-        # self.embedder = nn.Linear(2, self.d_model)
-        self.transformer_encoder = TransformerEncoder(trans_layers, n_heads, self.d_k, self.d_v,
-                                                      d_model, d_ffd, dropout)
-        self.graph_attn = GraphAttention(d_model, d_model, dropout, alpha, n_heads)
-
-    def forward(self, input_node):
-        '''
-
-        :param input_node: [bs, gs, embed_dim]
-        :return: [bs, gs, node_dim]
-        '''
-
-        # [bs, gs, d_model]
-        enc_input = input_node
-        # [bs, gs, d_mdoel]
-        trans_out = self.transformer_encoder(enc_input)
-        # return trans_out
-        graph_out = self.graph_attn(trans_out)
-
-        return graph_out
+        nn.init.xavier_normal_(self.init_embed.weight)
 
 
+    def forward(self, x):
+        x = self.init_embed(x)
+        for i in range(self.n_layers):
+            x = self.layers[i](x)
+            x = self.normalizer(x.view(-1, x.size(-1))).view(*x.size())
 
-
+        return x
 
 
 if __name__ == '__main__':
-    x = torch.Tensor(np.arange(12).reshape(1, 6, 2))
-    embedder = nn.Linear(2, 128)
-    x = embedder(x)
-    model = GraphAttention(128, 128, 0.6, 0.2, 8)
-    print(model(x))
+    x = torch.randn(1024, 20, 2)
+    model = Encoder(2, 3, 8, 128, 512)
+    print(model(x).size())

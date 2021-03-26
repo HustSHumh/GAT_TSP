@@ -42,7 +42,7 @@ class MultiHeadAttention(nn.Module):
         self.fc = nn.Linear(n_heads * d_v, d_model, bias=False)
 
         self.attn = ScaledDotProductAttention(temperature=d_k ** 0.5)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
 
     def forward(self, q, k, v, mask=None):
         """
@@ -72,7 +72,7 @@ class MultiHeadAttention(nn.Module):
 
         Q += residual
 
-        Q = self.layer_norm(Q)
+        Q = self.normalizer(Q.view(-1, Q.size(-1))).view(*Q.size())
 
         return Q
 
@@ -84,7 +84,7 @@ class PositionWiseFeedForward(nn.Module):
         self.fc1 = nn.Linear(d_model, d_ffd)
         self.fc2 = nn.Linear(d_ffd, d_model)
 
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -94,27 +94,8 @@ class PositionWiseFeedForward(nn.Module):
         x = self.fc2(F.relu(self.fc1(x)))
         x = self.dropout(x)
         x += residual
-        out = self.layer_norm(x)
+        out = self.normalizer(x.view(-1, x.size(-1))).view(*x.size())
 
         return out
 
-
-
-class PrePostcessLayer(nn.Module):
-    def __init__(self, d_model, dropout):
-        super(PrePostcessLayer, self).__init__()
-        self.dropout = nn.Dropout(dropout)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-
-    def forward(self, out):
-        return self.layer_norm(out)
-
-class PostProcessLayer(nn.Module):
-    def __init__(self, d_model, dropout):
-        super(PostProcessLayer, self).__init__()
-        self.dropout = nn.Dropout(dropout)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-
-    def forward(self, prev_out, out):
-        return self.layer_norm(out + prev_out) if prev_out is not None else self.layer_norm(out)
 
