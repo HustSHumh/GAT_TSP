@@ -42,7 +42,7 @@ class MultiHeadAttention(nn.Module):
         self.fc = nn.Linear(n_heads * d_v, d_model, bias=False)
 
         self.attn = ScaledDotProductAttention(temperature=d_k ** 0.5)
-        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
+        # self.normalizer = nn.BatchNorm1d(d_model, affine=True)
 
     def forward(self, q, k, v, mask=None):
         """
@@ -72,7 +72,7 @@ class MultiHeadAttention(nn.Module):
 
         Q += residual
 
-        Q = self.normalizer(Q.view(-1, Q.size(-1))).view(*Q.size())
+        # Q = self.normalizer(Q.view(-1, Q.size(-1))).view(*Q.size())
 
         return Q
 

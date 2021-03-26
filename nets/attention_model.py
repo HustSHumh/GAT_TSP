@@ -88,6 +88,7 @@ class EncodeLayer(nn.Module):
         self.ffd = PositionWiseFeedForward(d_model, d_ffd, dropout)
         self.fc = nn.Linear(2 * d_model, d_model, bias=False)
         # self.fc2 = nn.Linear(d_model, d_model, bias=False)
+        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
 
         nn.init.xavier_normal_(self.fc.weight)
         # nn.init.xavier_normal_(self.fc2.weight)
@@ -103,7 +104,11 @@ class EncodeLayer(nn.Module):
         conv_out = self.conv(x)
         # out = self.fc1(conv_out) + self.fc2(attn_out)
         out = self.fc(torch.cat([attn_out, conv_out], dim=-1))
-        return self.ffd(out + residual)
+
+        out += residual
+        out = self.normalizer(out.view(-1, out.size(-1))).view(*out.size())
+
+        return self.ffd(out)
 
 
 
