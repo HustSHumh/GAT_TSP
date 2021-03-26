@@ -84,9 +84,11 @@ class EncodeLayer(nn.Module):
         self.attn = MultiHeadAttention(n_heads, d_model, d_k, d_v, dropout)
         self.conv = LightConvLayer(d_model, n_heads=n_heads)
         self.ffd = PositionWiseFeedForward(d_model, d_ffd, dropout)
-        self.fc = nn.Linear(d_model, d_model, bias=False)
+        self.fc1 = nn.Linear(d_model, d_model, bias=False)
+        self.fc2 = nn.Linear(d_model, d_model, bias=False)
 
-        nn.init.xavier_normal_(self.fc.weight)
+        nn.init.xavier_normal_(self.fc1.weight)
+        nn.init.xavier_normal_(self.fc2.weight)
 
     def forward(self, x):
         """
@@ -97,7 +99,7 @@ class EncodeLayer(nn.Module):
         residual = x
         attn_out = self.attn(x, x, x)
         conv_out = self.conv(x)
-        out = self.fc(conv_out) + self.fc(attn_out)
+        out = self.fc1(conv_out) + self.fc2(attn_out)
 
         return self.ffd(out + residual)
 
