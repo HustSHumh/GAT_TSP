@@ -20,7 +20,7 @@ def get_options(args=None):
     # Model
     parser.add_argument('--model', default='GAT', help='Model, GAT')
     parser.add_argument('--embedding_dim', type=int, default=128, help='d_model, Dimension of input enbedding')
-    parser.add_argument('--hidden_dim', type=int, default=128, help='Dimension of hidden layers in Enc/Dec')
+    parser.add_argument('--hidden_dim', type=int, default=512, help='Dimension of hidden layers in Enc/Dec')
     parser.add_argument('--n_encode_layers', type=int, default=3,
                         help='Number of transformer layers in the encoder network')
     parser.add_argument('--tanh_clipping', type=float, default=10.,
