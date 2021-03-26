@@ -55,16 +55,18 @@ class LightConvLayer(nn.Module):
         '''
         n_heads = self.n_heads
 
-        batch_size, graph_size, d_model = x.size()
+        x = x.permute(0, 2, 1).contiguous()
 
+        B, C, T = x.size()
+        H = self.n_heads
 
         weight = self.weight
         if self.weight_softmax:
             weight = F.softmax(weight, dim=-1)
-        x = x.view(-1, n_heads, d_model)
+        x = x.view(-1, H, T)
 
         out = F.conv1d(x, weight, padding=self.padding, groups=self.n_heads)
-        out = out.view(batch_size, graph_size, d_model)
+        out = out.view(B, C, T).permute(0, 2, 1)
         out = self.fc(out)
 
         return out
@@ -84,11 +86,11 @@ class EncodeLayer(nn.Module):
         self.attn = MultiHeadAttention(n_heads, d_model, d_k, d_v, dropout)
         self.conv = LightConvLayer(d_model, n_heads=n_heads)
         self.ffd = PositionWiseFeedForward(d_model, d_ffd, dropout)
-        self.fc1 = nn.Linear(d_model, d_model, bias=False)
-        self.fc2 = nn.Linear(d_model, d_model, bias=False)
+        self.fc = nn.Linear(2 * d_model, d_model, bias=False)
+        # self.fc2 = nn.Linear(d_model, d_model, bias=False)
 
-        nn.init.xavier_normal_(self.fc1.weight)
-        nn.init.xavier_normal_(self.fc2.weight)
+        nn.init.xavier_normal_(self.fc.weight)
+        # nn.init.xavier_normal_(self.fc2.weight)
 
     def forward(self, x):
         """
@@ -99,8 +101,8 @@ class EncodeLayer(nn.Module):
         residual = x
         attn_out = self.attn(x, x, x)
         conv_out = self.conv(x)
-        out = self.fc1(conv_out) + self.fc2(attn_out)
-
+        # out = self.fc1(conv_out) + self.fc2(attn_out)
+        out = self.fc(torch.cat([attn_out, conv_out], dim=-1))
         return self.ffd(out + residual)
 
 
