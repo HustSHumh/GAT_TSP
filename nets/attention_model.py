@@ -22,7 +22,7 @@ class GraphAttentionLayer(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.leakyrelu = nn.LeakyReLU(self.alpha)
 
-        self.layer_norm = nn.LayerNorm(out_features, eps=1e-6)
+        self.normlizer = nn.BatchNorm1d(out_features, affine=True)
 
     def forward(self, h):
         """
@@ -51,7 +51,7 @@ class GraphAttentionLayer(nn.Module):
         if self.concat:
             h_prime = F.elu(h_prime)
 
-        return h_prime
+        return self.normlizer(h_prime.view(-1, h_prime.size(-1))).view(*h_prime.size())
 
     def _prepare_attentional_mechanism_input(self, Wh):
         """
@@ -125,7 +125,7 @@ class TransformerEncoder(nn.Module):
             TransformerEncoderLayer(d_model, n_heads, d_ffd, d_k, d_v, dropout)
             for _ in range(n_layers)
         ])
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
+        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
 
     def forward(self, enc_input):
         '''
@@ -134,13 +134,12 @@ class TransformerEncoder(nn.Module):
         :return:
         '''
         enc_out = self.dropout(enc_input)
-        enc_out = self.layer_norm(enc_out)
 
         for enc_layer in self.layers:
             enc_out = enc_layer(enc_out)
 
         # [bs, gs, d_model]
-        return enc_out
+        return self.normalizer(enc_out.view(-1, enc_out.size(-1))).view(*enc_out.size())
 
 
 
