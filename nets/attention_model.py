@@ -125,7 +125,7 @@ class TransformerEncoder(nn.Module):
             TransformerEncoderLayer(d_model, n_heads, d_ffd, d_k, d_v, dropout)
             for _ in range(n_layers)
         ])
-        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
+        # self.normalizer = nn.BatchNorm1d(d_model, affine=True)
 
     def forward(self, enc_input):
         '''
@@ -139,7 +139,7 @@ class TransformerEncoder(nn.Module):
             enc_out = enc_layer(enc_out)
 
         # [bs, gs, d_model]
-        return self.normalizer(enc_out.view(-1, enc_out.size(-1))).view(*enc_out.size())
-
+        # return self.normalizer(enc_out.view(-1, enc_out.size(-1))).view(*enc_out.size())
+        return enc_out
 
 
