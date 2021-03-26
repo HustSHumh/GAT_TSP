@@ -31,8 +31,9 @@ class GraphAttentionLayer(nn.Module):
         :return:
         """
         batch_size, graph_size = h.size(0), h.size(1)
-        adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
-
+        diag_ = torch.diag(torch.ones(graph_size-1), 1)
+        # adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
+        adj = (diag_ + diag_.T)[None, :, :].expand(batch_size, -1, -1)
         #[bs, gs, out_feature]
         Wh = self.W(h)
         # [bs, gs, gs, 2*out_f]
