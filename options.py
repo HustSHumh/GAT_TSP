@@ -21,7 +21,7 @@ def get_options(args=None):
     parser.add_argument('--model', default='GAT', help='Model, GAT')
     parser.add_argument('--embedding_dim', type=int, default=128, help='d_model, Dimension of input enbedding')
     parser.add_argument('--hidden_dim', type=int, default=128, help='Dimension of hidden layers in Enc/Dec')
-    parser.add_argument('--n_encode_layers', type=int, default=3,
+    parser.add_argument('--n_encode_layers', type=int, default=2,
                         help='Number of transformer layers in the encoder network')
     parser.add_argument('--tanh_clipping', type=float, default=10.,
                         help='Clip the parameters to within +- this value using tanh. '
@@ -64,7 +64,7 @@ def get_options(args=None):
     parser.add_argument('--output_dir', default='outputs', help='Directory to write output models to')
     parser.add_argument('--epoch_start', type=int, default=0,
                         help='Start at epoch # (relevant for learning rate decay)')
-    parser.add_argument('--checkpoint_epochs', type=int, default=5,
+    parser.add_argument('--checkpoint_epochs', type=int, default=1,
                         help='Save checkpoint every n epochs (default 1), 0 to save no checkpoints')
     parser.add_argument('--load_path', help='Path to load model parameters and optimizer state from')
     parser.add_argument('--resume', help='Resume from previous checkpoint file')

@@ -34,7 +34,7 @@ class GraphAttentionLayer(nn.Module):
         diag_ = torch.diag(torch.ones(graph_size-1), 1)
         # 对角线是0  其他非零
         adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
-        # adj = (diag_ + diag_.T)[None, :, :].expand(batch_size, -1, -1)
+        # adj = (torch.eye(graph_size) + diag_ + diag_.T)[None, :, :].expand(batch_size, -1, -1)
         #[bs, gs, out_feature]
         Wh = self.W(h)
         # [bs, gs, gs, 2*out_f]
@@ -50,9 +50,10 @@ class GraphAttentionLayer(nn.Module):
         # [bs, gs, out_f]
         h_prime = torch.matmul(attention, Wh)
         if self.concat:
-            h_prime = F.elu(h_prime)
+            h_prime = F.elu(h_prime) + h
+            h_prime = self.normlizer(h_prime.view(-1, h_prime.size(-1))).view(*h_prime.size())
 
-        return self.normlizer(h_prime.view(-1, h_prime.size(-1))).view(*h_prime.size())
+        return h_prime
 
     def _prepare_attentional_mechanism_input(self, Wh):
         """
@@ -84,6 +85,9 @@ class GraphAttention(nn.Module):
         for i, attention in enumerate(self.attentions):
             self.add_module('attention_{}'.format(i), attention)
         self.out_att = GraphAttentionLayer(n_hid * nheads, n_hid, dropout, alpha, concat=False)
+        self.ffd = PositionWiseFeedForward(n_hid, n_hid, dropout)
+        self.normalizer1 = nn.BatchNorm1d(n_hid, affine=True)
+        self.normalizer2 = nn.BatchNorm1d(n_hid, affine=True)
 
     def forward(self, x):
         """
@@ -92,9 +96,14 @@ class GraphAttention(nn.Module):
         :return: [bs, gs, d_model]
         """
         x = self.dropout(x)
+        residual1= x
         x = torch.cat([att(x) for att in self.attentions], dim=-1)
         x = self.dropout(x)
         x = self.out_att(x)
+        x = self.normalizer1((F.elu(x) + residual1).view(-1, x.size(-1))).view(*x.size())
+        residual2 = x
+        x = self.ffd(x) + residual2
+        x = self.normalizer2(x.view(-1, x.size(-1))).view(*x.size())
         return x
 
 
