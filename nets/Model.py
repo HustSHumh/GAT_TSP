@@ -55,7 +55,7 @@ class Model(nn.Module):
         self.W_placeholder = nn.Parameter(torch.Tensor(2 * self.embedding_dim))
         self.W_placeholder.data.uniform_(-1, 1)
 
-        self.init_embed = nn.Linear(node_dim, self.embedding_dim)
+        # self.init_embed = nn.Linear(node_dim, self.embedding_dim)
 
         self.embeder = Encoder(
             trans_layers=self.n_encode_layers,
@@ -85,9 +85,9 @@ class Model(nn.Module):
         '''
         # [bs, gs, d_model]
         if self.checkpoint_encoder and self.training:
-            embeddings = checkpoint(self.embeder, self.init_embed(input))
+            embeddings = checkpoint(self.embeder, input)
         else:
-            embeddings = self.embeder(self.init_embed(input))
+            embeddings = self.embeder(input)
 
         # [bs, num_steps, graph_size], [bs, num_step]
         _log_p, pi = self._inner(input, embeddings)

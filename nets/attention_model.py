@@ -50,7 +50,7 @@ class GraphAttentionLayer(nn.Module):
         # [bs, gs, out_f]
         h_prime = torch.matmul(attention, Wh)
         if self.concat:
-            h_prime = F.elu(h_prime) + h
+            h_prime = F.elu(h_prime)
             h_prime = self.normlizer(h_prime.view(-1, h_prime.size(-1))).view(*h_prime.size())
 
         return h_prime
@@ -78,6 +78,14 @@ class GraphAttentionLayer(nn.Module):
 class GraphAttention(nn.Module):
 
     def __init__(self, in_features, n_hid, dropout, alpha, nheads):
+        '''
+
+        :param in_features: point's dim
+        :param n_hid: ffd's hidden dim = d_model
+        :param dropout:
+        :param alpha:
+        :param nheads:
+        '''
         super(GraphAttention, self).__init__()
         self.dropout = nn.Dropout(dropout)
         self.attentions = [GraphAttentionLayer(in_features, n_hid, dropout, alpha, concat=True)
@@ -92,15 +100,14 @@ class GraphAttention(nn.Module):
     def forward(self, x):
         """
 
-        :param x: [bs, gs, d_model]
+        :param x: [bs, gs, node_dim]
         :return: [bs, gs, d_model]
         """
         x = self.dropout(x)
-        residual1= x
         x = torch.cat([att(x) for att in self.attentions], dim=-1)
         x = self.dropout(x)
         x = self.out_att(x)
-        x = self.normalizer1((F.elu(x) + residual1).view(-1, x.size(-1))).view(*x.size())
+        x = self.normalizer1(F.elu(x).view(-1, x.size(-1))).view(*x.size())
         residual2 = x
         x = self.ffd(x) + residual2
         x = self.normalizer2(x.view(-1, x.size(-1))).view(*x.size())

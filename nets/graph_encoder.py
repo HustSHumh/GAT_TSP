@@ -18,23 +18,22 @@ class Encoder(nn.Module):
         # self.embedder = nn.Linear(2, self.d_model)
         self.transformer_encoder = TransformerEncoder(trans_layers, n_heads, self.d_k, self.d_v,
                                                       d_model, d_ffd, dropout)
-        self.graph_attn = GraphAttention(d_model, d_model, dropout, alpha, n_heads)
+        self.graph_attn = GraphAttention(2, d_model, dropout, alpha, n_heads)
 
     def forward(self, input_node):
         '''
 
-        :param input_node: [bs, gs, embed_dim]
-        :return: [bs, gs, node_dim]
+        :param input_node: [bs, gs, 2]
+        :return: [bs, gs, d_model]
         '''
 
-        # [bs, gs, d_model]
-        enc_input = input_node
+        # [bs, gs, 2]
+        enc_input = self.graph_attn(input_node)
         # [bs, gs, d_mdoel]
         trans_out = self.transformer_encoder(enc_input)
         # return trans_out
-        graph_out = self.graph_attn(trans_out)
 
-        return graph_out
+        return trans_out
 
 
 
