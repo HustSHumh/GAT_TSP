@@ -1,3 +1,7 @@
+import warnings
+
+warnings.filterwarnings('ignore')
+
 import os
 import json
 import pprint as pp
