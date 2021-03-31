@@ -42,7 +42,7 @@ class GraphAttentionLayer(nn.Module):
         # [bs, gs, gs]
         e = self.leakyrelu(self.a(a_input).squeeze(-1))
         zero_vec = -9e15*torch.ones_like(e)
-        attention = torch.where((adj > 0).cuda(), e, zero_vec)
+        attention = torch.where((adj > 0).to(e.device), e, zero_vec)
 
         # [bs, gs, gs]
         attention = F.softmax(attention, dim=-1)

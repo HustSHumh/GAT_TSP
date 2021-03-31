@@ -11,3 +11,6 @@ __pycache__
 logs
 outputs/
 trained_model
+venv
+results
+Data/data

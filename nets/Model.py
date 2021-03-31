@@ -5,10 +5,26 @@ import math
 from typing import NamedTuple
 
 from nets.graph_encoder import Encoder
+from utils.functions import sample_many
 
 
 def set_decode_type(model, decode_type):
     model.set_decode_type(decode_type)
+
+class ModelParameters(object):
+    def __init__(self, args):
+        super(ModelParameters, self).__init__()
+        self.embedding_dim = args['embedding_dim']
+        self.hidden_dim = args['hidden_dim']
+        self.n_encode_layers = args['n_encode_layers']
+        self.dropout = args['dropout']
+        self.tanh_clipping = args['tanh_clipping']
+        self.mask_inner = args['mask_inner']
+        self.mask_logits = args['mask_logits']
+        self.n_heads = args['n_heads']
+        self.checkpoint_encoder = args['checkpoint_encoder']
+        self.alpha = args['alpha']
+
 
 
 class AttentionModelFixed(NamedTuple):
@@ -302,3 +318,10 @@ class Model(nn.Module):
 
         return logits, glimpse.squeeze(-2)
 
+    def sample_many(self, input, batch_rep=1, iter_rep=1):
+        return sample_many(
+            lambda input: self._inner(*input),  # Need to unpack tuple into arguments
+            lambda input, pi: self.problem.get_costs(input[0], pi),  # Don't need embeddings as input to get_costs
+            (input, self.embeder(self.init_embed(input))),  # Pack input with embeddings (additional input)
+            batch_rep, iter_rep
+        )
