@@ -10,4 +10,4 @@ gen
 __pycache__
 logs
 outputs/
-
+trained_model
