@@ -35,7 +35,8 @@ class Encoder(nn.Module):
         trans_out = self.transformer_encoder(enc_input)
         # return trans_out
         graph_out = self.graph_attn(trans_out) + trans_out
-
+        # graph_out = self.graph_attn(trans_out)
+        # return graph_out
         return self.normalizer(graph_out.view(-1, graph_out.size(-1))).view(*graph_out.size())
 
 
