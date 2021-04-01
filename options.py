@@ -30,7 +30,7 @@ def get_options(args=None):
     parser.add_argument('--mask_logits', action='store_false')
     parser.add_argument('--n_heads', type=int, default=8)
     parser.add_argument('--alpha', type=float, default=0.2, help='GAT leakyRelu alpha')
-    parser.add_argument('--dropout', type=float, default=0.1)
+    parser.add_argument('--dropout', type=float, default=0.0)
 
     # Training
     parser.add_argument('--lr_model', type=float, default=1e-4)
