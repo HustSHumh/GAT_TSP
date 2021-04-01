@@ -20,6 +20,8 @@ class Encoder(nn.Module):
                                                       d_model, d_ffd, dropout)
         self.graph_attn = GraphAttention(d_model, d_model, dropout, alpha, n_heads)
 
+        self.normalizer = nn.BatchNorm1d(d_model, affine=True)
+
     def forward(self, input_node):
         '''
 
@@ -32,9 +34,9 @@ class Encoder(nn.Module):
         # [bs, gs, d_mdoel]
         trans_out = self.transformer_encoder(enc_input)
         # return trans_out
-        graph_out = self.graph_attn(trans_out)
+        graph_out = self.graph_attn(trans_out) + trans_out
 
-        return graph_out
+        return self.normalizer(graph_out.view(-1, graph_out.size(-1))).view(*graph_out.size())
 
 
 
