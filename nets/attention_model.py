@@ -33,8 +33,8 @@ class GraphAttentionLayer(nn.Module):
         batch_size, graph_size = h.size(0), h.size(1)
         diag_ = torch.diag(torch.ones(graph_size-1), 1)
         # 对角线是0  其他非零
-        adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
-        # adj = (torch.eye(graph_size) + diag_ + diag_.T)[None, :, :].expand(batch_size, -1, -1)
+        # adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
+        adj = (torch.eye(graph_size) + diag_ + diag_.T)[None, :, :].expand(batch_size, -1, -1)
         #[bs, gs, out_feature]
         Wh = self.W(h)
         # [bs, gs, gs, 2*out_f]
