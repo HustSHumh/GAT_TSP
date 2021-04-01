@@ -69,7 +69,7 @@ class State(NamedTuple):
     def update(self, selected):
 
         # 直接用前两次的选点
-        first_a = self.prev_a
+        # first_a = self.prev_a
 
         prev_a = selected[:, None]
         cur_coord = self.loc[self.ids, prev_a]
@@ -77,7 +77,7 @@ class State(NamedTuple):
         if self.cur_coord is not None:
             lengths = self.lengths + (cur_coord - self.cur_coord).norm(p=2, dim=-1)
 
-        # first_a = prev_a if self.i.item() == 0 else self.first_a
+        first_a = prev_a if self.i.item() == 0 else self.first_a
 
         if self.visited_.dtype == torch.uint8:
             visited_ = self.visited_.scatter(-1, prev_a[:, :, None], 1)
