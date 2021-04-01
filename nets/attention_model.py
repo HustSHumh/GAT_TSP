@@ -50,7 +50,7 @@ class GraphAttentionLayer(nn.Module):
         # [bs, gs, out_f]
         h_prime = torch.matmul(attention, Wh)
         if self.concat:
-            h_prime = F.elu(h_prime) + h
+            h_prime = F.elu(h_prime)
             h_prime = self.normlizer(h_prime.view(-1, h_prime.size(-1))).view(*h_prime.size())
 
         return h_prime
@@ -80,14 +80,15 @@ class GraphAttention(nn.Module):
     def __init__(self, in_features, n_hid, dropout, alpha, nheads):
         super(GraphAttention, self).__init__()
         self.dropout = nn.Dropout(dropout)
+        n_hid = n_hid // nheads
         self.attentions = [GraphAttentionLayer(in_features, n_hid, dropout, alpha, concat=True)
                           for _ in range(nheads)]
         for i, attention in enumerate(self.attentions):
             self.add_module('attention_{}'.format(i), attention)
-        self.out_att = GraphAttentionLayer(n_hid * nheads, n_hid, dropout, alpha, concat=False)
-        self.ffd = PositionWiseFeedForward(n_hid, n_hid, dropout)
-        self.normalizer1 = nn.BatchNorm1d(n_hid, affine=True)
-        self.normalizer2 = nn.BatchNorm1d(n_hid, affine=True)
+        self.out_att = GraphAttentionLayer(n_hid * nheads, n_hid * nheads, dropout, alpha, concat=False)
+        self.ffd = PositionWiseFeedForward(n_hid * nheads, n_hid * nheads, dropout)
+        self.normalizer1 = nn.BatchNorm1d(n_hid * nheads, affine=True)
+        self.normalizer2 = nn.BatchNorm1d(n_hid * nheads, affine=True)
 
     def forward(self, x):
         """
