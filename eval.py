@@ -70,7 +70,7 @@ def _eval_dataset(model, dataset, opts, device):
 
 def eval_dataset(dataset_path, opts):
     model = load_model(opts.model)
-    use_cuda = torch.cuda.is_available() and opts.no_cuda
+    use_cuda = torch.cuda.is_available() and not opts.no_cuda
 
     device = torch.device('cuda:0' if use_cuda else 'cpu')
     dataset = model.problem.make_dataset(filename=dataset_path, num_samples=opts.val_size, offset=opts.offset)
