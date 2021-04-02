@@ -16,11 +16,6 @@ class GraphAttentionLayer(nn.Module):
 
         self.W = nn.Linear(in_features, out_features, bias=False)
         nn.init.xavier_uniform_(self.W.weight, gain=1.414)
-        self.a = nn.Linear(2 * out_features, 1)
-        nn.init.xavier_uniform_(self.a.weight, gain=1.414)
-
-        self.dropout = nn.Dropout(dropout)
-        self.leakyrelu = nn.LeakyReLU(self.alpha)
 
         self.normlizer = nn.BatchNorm1d(out_features, affine=True)
 
@@ -30,49 +25,14 @@ class GraphAttentionLayer(nn.Module):
         :param h: [bs, gs, in_f]
         :return:
         """
-        batch_size, graph_size = h.size(0), h.size(1)
-        diag_ = torch.diag(torch.ones(graph_size-1), 1)
-        # 对角线是0  其他非零
-        # adj = torch.ones(size=(graph_size, graph_size)) - torch.eye(graph_size)[None, :, :].expand(batch_size, -1, -1)
-        adj = (torch.eye(graph_size) + diag_ + diag_.T)[None, :, :].expand(batch_size, -1, -1)
         #[bs, gs, out_feature]
-        Wh = self.W(h)
-        # [bs, gs, gs, 2*out_f]
-        a_input = self._prepare_attentional_mechanism_input(Wh)
-        # [bs, gs, gs]
-        e = self.leakyrelu(self.a(a_input).squeeze(-1))
-        zero_vec = -9e15*torch.ones_like(e)
-        attention = torch.where((adj > 0).to(e.device), e, zero_vec)
+        h_prime = self.W(h)
 
-        # [bs, gs, gs]
-        attention = F.softmax(attention, dim=-1)
-        attention = self.dropout(attention)
-        # [bs, gs, out_f]
-        h_prime = torch.matmul(attention, Wh)
         if self.concat:
             h_prime = F.elu(h_prime)
             h_prime = self.normlizer(h_prime.view(-1, h_prime.size(-1))).view(*h_prime.size())
 
         return h_prime
-
-    def _prepare_attentional_mechanism_input(self, Wh):
-        """
-
-        :param Wh: (bs, gs, out_f)
-        :return:
-        """
-
-        batch_size, N = Wh.size(0), Wh.size(1)
-        # [bs, N * N, out_f]
-        Wh_repearted_in_chunks = Wh.repeat_interleave(N, dim=1)
-        # [bs, N * N, out_f]
-        Wh_repearted_alternating = Wh.repeat(1, N, 1)
-
-        # [bs, N * N, 2 * out_f]
-        all_combinations_matrix = torch.cat([Wh_repearted_in_chunks, Wh_repearted_alternating], dim=-1)
-
-        # [bs, N, N, 2 * out_f]
-        return all_combinations_matrix.view(batch_size, N, N, 2 * self.out_features)
 
 
 class GraphAttention(nn.Module):
